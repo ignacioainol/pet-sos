@@ -19,29 +19,50 @@ Directory structure:
     │   │   └── favicon-96x96.png (non-text)
     │   └── favicon.ico (non-text)
     ├── src/
+    │   ├── application/
+    │   │   └── pet/
+    │   │       ├── ListPets.ts
+    │   │       └── ReportPet.ts
     │   ├── assets/
     │   │   └── quasar-logo-vertical.svg
     │   ├── boot/
     │   │   ├── .gitkeep
-    │   │   └── axios.ts
-    │   ├── components/
-    │   │   ├── EssentialLink.vue
-    │   │   ├── ExampleComponent.vue
-    │   │   └── models.ts
+    │   │   ├── axios.ts
+    │   │   └── dependencies.ts
     │   ├── css/
     │   │   ├── app.scss
     │   │   └── quasar.variables.scss
-    │   ├── layouts/
-    │   │   └── MainLayout.vue
-    │   ├── pages/
-    │   │   ├── ErrorNotFound.vue
-    │   │   └── IndexPage.vue
-    │   ├── router/
-    │   │   ├── index.ts
-    │   │   └── routes.ts
-    │   ├── stores/
-    │   │   ├── example-store.ts
-    │   │   └── index.ts
+    │   ├── domain/
+    │   │   ├── entities/
+    │   │   │   └── Pet.ts
+    │   │   └── repositories/
+    │   │       └── IPetRepository.ts
+    │   ├── infrastructure/
+    │   │   └── repositories/
+    │   │       ├── AxiosPetRepository.ts
+    │   │       ├── MockPetRepository.ts
+    │   │       └── PetApiDTO.ts
+    │   ├── presentation/
+    │   │   ├── components/
+    │   │   │   ├── NavLink.vue
+    │   │   │   ├── PetCard.vue
+    │   │   │   └── PetFeedCard.vue
+    │   │   ├── features/
+    │   │   │   └── list-pets/
+    │   │   │       ├── components/
+    │   │   │       │   └── PetListComponent.vue
+    │   │   │       └── store/
+    │   │   │           └── usePetListStore.ts
+    │   │   ├── layouts/
+    │   │   │   └── MainLayout.vue
+    │   │   ├── pages/
+    │   │   │   ├── ErrorNotFound.vue
+    │   │   │   └── IndexPage.vue
+    │   │   ├── router/
+    │   │   │   ├── index.ts
+    │   │   │   └── routes.ts
+    │   │   └── store/
+    │   │       └── index.ts
     │   ├── App.vue
     │   └── env.d.ts
     ├── .editorconfig
@@ -80,8 +101,8 @@ import { Quasar } from 'quasar'
 import { markRaw } from 'vue'
 import RootComponent from 'app/src/App.vue'
 
-import createStore from 'app/src/stores/index'
-import createRouter from 'app/src/router/index'
+import createStore from 'app/src/presentation/store/index'
+import createRouter from 'app/src/presentation/router/index'
 
 
 
@@ -286,7 +307,9 @@ createQuasarApp(createApp, quasarUserOptions)
 
     return Promise[ method ]([
       
-      import('boot/axios')
+      import('boot/axios'),
+      
+      import('boot/dependencies')
       
     ]).then(bootFiles => {
       const boot = mapFn(bootFiles).filter(entry => typeof entry === 'function')
@@ -521,20 +544,11 @@ File: .quasar/tsconfig.json
       "components": [
         "./../src/components"
       ],
-      "components/*": [
-        "./../src/components/*"
-      ],
       "layouts": [
         "./../src/layouts"
       ],
-      "layouts/*": [
-        "./../src/layouts/*"
-      ],
       "pages": [
         "./../src/pages"
-      ],
-      "pages/*": [
-        "./../src/pages/*"
       ],
       "assets": [
         "./../src/assets"
@@ -551,9 +565,6 @@ File: .quasar/tsconfig.json
       "stores": [
         "./../src/stores"
       ],
-      "stores/*": [
-        "./../src/stores/*"
-      ],
       "#q-app": [
         "./../node_modules/@quasar/app-vite/types/index.d.ts"
       ],
@@ -568,6 +579,9 @@ File: .quasar/tsconfig.json
       ],
       "#q-app/bex/private/bex-bridge": [
         "./../node_modules/@quasar/app-vite/types/bex/bex-bridge.d.ts"
+      ],
+      "@/*": [
+        "./../src/*"
       ]
     }
   },
@@ -608,6 +622,28 @@ File: public/icons/favicon-96x96.png (non-text - content not included)
 File: public/favicon.ico (non-text - content not included)
 ================================================
 
+
+================================================
+File: src/application/pet/ListPets.ts
+================================================
+import type { IPetRepository } from '../../domain/repositories/IPetRepository';
+import type { Pet } from '../../domain/entities/Pet';
+
+// Este es el Caso de Uso. Su única responsabilidad es listar las mascotas.
+export class ListPets {
+  // Depende de la ABSTRACCIÓN, no de la implementación.
+  // Esto es Inyección de Dependencias.
+  constructor(private readonly petRepository: IPetRepository) {}
+
+  async execute(): Promise<Pet[]> {
+    // Llama al método del repositorio y podría añadir lógica extra
+    // como logging, caching, etc.
+    const pets = await this.petRepository.getAll();
+
+    // Podríamos ordenar las mascotas por fecha aquí, por ejemplo.
+    return pets.sort((a, b) => b.reportedAt.getTime() - a.reportedAt.getTime());
+  }
+}
 
 ================================================
 File: src/assets/quasar-logo-vertical.svg
@@ -664,96 +700,31 @@ export default defineBoot(({ app }) => {
 export { api };
 
 ================================================
-File: src/components/EssentialLink.vue
+File: src/boot/dependencies.ts
 ================================================
-<template>
-  <q-item
-    clickable
-    tag="a"
-    target="_blank"
-    :href="link"
-  >
-    <q-item-section
-      v-if="icon"
-      avatar
-    >
-      <q-icon :name="icon" />
-    </q-item-section>
+// import { AxiosPetRepository } from 'src/infrastructure/repositories/AxiosPetRepository';
+import { MockPetRepository } from '../infrastructure/repositories/MockPetRepository';
+import { ListPets } from '../application/pet/ListPets';
 
-    <q-item-section>
-      <q-item-label>{{ title }}</q-item-label>
-      <q-item-label caption>{{ caption }}</q-item-label>
-    </q-item-section>
-  </q-item>
-</template>
+// 1. Creamos una instancia de nuestro repositorio concreto
+// const petRepository = new AxiosPetRepository();
+const petRepository = new MockPetRepository();
 
-<script setup lang="ts">
-export interface EssentialLinkProps {
-  title: string;
-  caption?: string;
-  link?: string;
-  icon?: string;
+// 2. Creamos instancias de nuestros casos de uso, inyectando las dependencias
+const listPetsUseCase = new ListPets(petRepository);
+// const reportPetUseCase = new ReportPet(petRepository); // <-- cuando lo creemos
+
+// 3. Exportamos un contenedor de dependencias simple
+const dependencies = {
+  useCases: {
+    listPets: listPetsUseCase,
+    // reportPet: reportPetUseCase,
+  },
 };
 
-withDefaults(defineProps<EssentialLinkProps>(), {
-  caption: '',
-  link: '#',
-  icon: '',
-});
-</script>
+export type AppDependencies = typeof dependencies;
 
-================================================
-File: src/components/ExampleComponent.vue
-================================================
-<template>
-  <div>
-    <p>{{ title }}</p>
-    <ul>
-      <li v-for="todo in todos" :key="todo.id" @click="increment">
-        {{ todo.id }} - {{ todo.content }}
-      </li>
-    </ul>
-    <p>Count: {{ todoCount }} / {{ meta.totalCount }}</p>
-    <p>Active: {{ active ? 'yes' : 'no' }}</p>
-    <p>Clicks on todos: {{ clickCount }}</p>
-  </div>
-</template>
-
-<script setup lang="ts">
-import { computed, ref } from 'vue';
-import type { Todo, Meta } from './models';
-
-interface Props {
-  title: string;
-  todos?: Todo[];
-  meta: Meta;
-  active: boolean;
-};
-
-const props = withDefaults(defineProps<Props>(), {
-  todos: () => []
-});
-
-const clickCount = ref(0);
-function increment() {
-  clickCount.value += 1;
-  return clickCount.value;
-}
-
-const todoCount = computed(() => props.todos.length);
-</script>
-
-================================================
-File: src/components/models.ts
-================================================
-export interface Todo {
-  id: number;
-  content: string;
-}
-
-export interface Meta {
-  totalCount: number;
-}
+export default dependencies;
 
 ================================================
 File: src/css/app.scss
@@ -790,46 +761,534 @@ $info      : #31CCEC;
 $warning   : #F2C037;
 
 ================================================
-File: src/layouts/MainLayout.vue
+File: src/domain/entities/Pet.ts
+================================================
+// This interfaces Pet entity represents a pet that can be reported as lost or found.
+export interface Pet {
+  id: string;
+  name: string;
+  species: 'dog' | 'cat' | 'other';
+  genre: 'male' | 'female';
+  status: 'lost' | 'found';
+  location: string;
+  description: string;
+  imageUrls: string[];
+  reportedAt: Date;
+  reportedBy: {
+    id: string;
+    name: string;
+    contactInfo: {
+      email: string;
+      phone: string;
+    };
+  };
+  isActive: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+================================================
+File: src/domain/repositories/IPetRepository.ts
+================================================
+import type { Pet } from '../entities/Pet';
+
+export interface IPetRepository {
+  getAll(): Promise<Pet[]>;
+  getById(id: string): Promise<Pet | null>;
+  // Aquí van los otros métodos como: save(pet: Pet): Promise<void>;
+}
+
+================================================
+File: src/infrastructure/repositories/AxiosPetRepository.ts
+================================================
+import type { IPetRepository } from '../../domain/repositories/IPetRepository';
+import type { Pet } from '../../domain/entities/Pet';
+import type { PetApiResponseDTO } from './PetApiDTO';
+import { api } from 'src/boot/axios';
+
+export class AxiosPetRepository implements IPetRepository {
+  async getAll(): Promise<Pet[]> {
+    // Le decimos a Axios que esperamos un array de DTOs. ¡Cero 'any'!
+    const { data } = await api.get<PetApiResponseDTO[]>('/pets');
+
+    // Mapeamos de la estructura de la API (DTO) a la estructura de nuestro dominio (Entity).
+    return data.map((apiPet) => this.mapToDomain(apiPet));
+  }
+
+  async getById(id: string): Promise<Pet | null> {
+    try {
+      const { data } = await api.get<PetApiResponseDTO>(`/pets/${id}`);
+      return this.mapToDomain(data);
+    } catch (error) {
+      console.error(`Pet with id ${id} not found`, error);
+      return null;
+    }
+  }
+
+  // El traductor: recibe un DTO y devuelve una Entidad de Dominio.
+  // Ahora es totalmente seguro a nivel de tipos.
+  private mapToDomain(apiPet: PetApiResponseDTO): Pet {
+    return {
+      id: apiPet.id,
+      name: apiPet.name,
+      species: apiPet.species,
+      genre: apiPet.genre,
+      status: apiPet.status,
+      location: apiPet.location,
+      description: apiPet.description,
+      imageUrls: apiPet.image_urls,
+      reportedAt: new Date(apiPet.reported_at),
+      reportedBy: {
+        ...apiPet.reported_by,
+        contactInfo: apiPet.reported_by.contact_info,
+      },
+      isActive: apiPet.is_active,
+      createdAt: new Date(apiPet.created_at),
+      updatedAt: new Date(apiPet.updated_at),
+    };
+  }
+}
+
+================================================
+File: src/infrastructure/repositories/MockPetRepository.ts
+================================================
+import type { IPetRepository } from '../../domain/repositories/IPetRepository';
+import type { Pet } from '../../domain/entities/Pet';
+
+const mockPets: Pet[] = [
+  {
+    id: '1',
+    name: 'Firulais',
+    species: 'dog',
+    genre: 'male',
+    status: 'found',
+    location: 'Parque Central, Ciudad Gótica',
+    description:
+      'Encontrado cerca de la fuente principal. Es muy amigable y parece bien cuidado. Llevaba un collar rojo sin placa.',
+    imageUrls: [
+      'https://images.unsplash.com/photo-1529831129093-0fa4866281ee?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8bGFicmFkb3J8ZW58MHx8MHx8fDA%3D',
+      'https://placedog.net/500/500?id=3',
+      'https://placedog.net/500/500?id=2',
+    ],
+    reportedAt: new Date('2024-05-20T10:00:00Z'),
+    reportedBy: {
+      id: 'user1',
+      name: 'Juan Pérez',
+      contactInfo: { email: 'juan.perez@example.com', phone: '+123456789' },
+    },
+    isActive: true,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  },
+  {
+    id: '2',
+    name: 'Misha',
+    species: 'cat',
+    genre: 'female',
+    status: 'found',
+    location: 'Calle Falsa 123, Springfield',
+    description:
+      'Estaba maullando en mi tejado. Es un poco tímida pero se deja acariciar. De color gris con manchas blancas.',
+    imageUrls: [
+      'https://images.unsplash.com/photo-1503431128871-cd250803fa41?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8Z2F0byUyMG5lZ3JvfGVufDB8fDB8fHww',
+      'https://images.unsplash.com/photo-1649171818128-0a8f390e990c?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTF8fGdhdG8lMjBuZWdyb3xlbnwwfHwwfHx8MA%3D%3D',
+      'https://images.unsplash.com/photo-1686762843717-dec31bdf210f?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MjB8fGdhdG8lMjBuZWdyb3xlbnwwfHwwfHx8MA%3D%3D',
+    ],
+    reportedAt: new Date('2024-05-19T15:30:00Z'),
+    reportedBy: {
+      id: 'user2',
+      name: 'Ana Gómez',
+      contactInfo: { email: 'ana.gomez@example.com', phone: '+987654321' },
+    },
+    isActive: true,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  },
+  {
+    id: '3',
+    name: 'Lula',
+    species: 'dog',
+    genre: 'female',
+    status: 'found',
+    location: 'Calle Verdadera 123, Concepción',
+    description:
+      'Estaba maullando en mi tejado. Es un poco tímida pero se deja acariciar. De color gris con manchas blancas.',
+    imageUrls: [
+      'https://plus.unsplash.com/premium_photo-1686523494577-111ec2c50e61?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MXx8cG9saWNlJTIwZG9nfGVufDB8fDB8fHww',
+      'https://plus.unsplash.com/premium_photo-1686523494549-deba58e35e95?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8OXx8cG9saWNlJTIwZG9nfGVufDB8fDB8fHww',
+      'https://plus.unsplash.com/premium_photo-1686523495733-dd7119643ea7?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTN8fHBvbGljZSUyMGRvZ3xlbnwwfHwwfHx8MA%3D%3D',
+    ],
+    reportedAt: new Date('2024-05-19T15:30:00Z'),
+    reportedBy: {
+      id: 'user3',
+      name: 'Rodrigo Gómez',
+      contactInfo: { email: 'rodrigo.gomez@example.com', phone: '+987654331' },
+    },
+    isActive: true,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  },
+];
+
+export class MockPetRepository implements IPetRepository {
+  async getAll(): Promise<Pet[]> {
+    // Simulamos una llamada a la red con un pequeño retardo
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        // Filtramos solo las mascotas encontradas y activas
+        const foundPets = mockPets.filter((p) => p.status === 'found' && p.isActive);
+        resolve(foundPets);
+      }, 500); // 500ms de delay
+    });
+  }
+
+  async getById(id: string): Promise<Pet | null> {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        const pet = mockPets.find((p) => p.id === id) || null;
+        resolve(pet);
+      }, 300);
+    });
+  }
+}
+
+================================================
+File: src/infrastructure/repositories/PetApiDTO.ts
+================================================
+export interface PetApiResponseDTO {
+  id: string;
+  name: string;
+  species: 'dog' | 'cat' | 'other';
+  genre: 'male' | 'female';
+  status: 'lost' | 'found';
+  location: string;
+  description: string;
+  image_urls: string[];
+  reported_at: string;
+  reported_by: {
+    id: string;
+    name: string;
+    contact_info: {
+      email: string;
+      phone: string;
+    };
+  };
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+================================================
+File: src/presentation/components/NavLink.vue
 ================================================
 <template>
-  <q-layout view="lHh Lpr lFf">
+  <q-item clickable tag="a" :to="link">
+    <q-item-section v-if="icon" avatar>
+      <q-icon :name="icon" />
+    </q-item-section>
+
+    <q-item-section>
+      <q-item-label>{{ title }}</q-item-label>
+      <q-item-label caption>{{ caption }}</q-item-label>
+    </q-item-section>
+  </q-item>
+</template>
+
+<script setup lang="ts">
+export interface NavLinkProps {
+  title: string;
+  caption?: string;
+  link?: string;
+  icon?: string;
+}
+
+withDefaults(defineProps<NavLinkProps>(), {
+  caption: '',
+  link: '#',
+  icon: '',
+});
+</script>
+
+================================================
+File: src/presentation/components/PetCard.vue
+================================================
+<template>
+  <q-card>
+    <q-img :src="pet.imageUrls[0]" :ratio="1" />
+    <q-card-section>
+      <div class="text-h6">
+        {{ pet.name }}
+        <q-badge :color="pet.status === 'lost' ? 'negative' : 'positive'">{{ pet.status }}</q-badge>
+      </div>
+      <div class="text-subtitle2">{{ pet.location }}</div>
+    </q-card-section>
+    <q-card-section class="q-pt-none">
+      {{ pet.description }}
+    </q-card-section>
+    <q-card-actions align="right">
+      <q-btn flat dense color="primary" label="View Details" />
+    </q-card-actions>
+  </q-card>
+</template>
+
+<script setup lang="ts">
+import type { Pet } from '../../domain/entities/Pet';
+
+interface Props {
+  pet: Pet;
+}
+
+defineProps<Props>();
+</script>
+
+================================================
+File: src/presentation/components/PetFeedCard.vue
+================================================
+<template>
+  <!-- Contenedor principal que ocupa toda la altura de la pantalla -->
+  <div class="pet-feed-card">
+    <!-- Sección del carrusel de imágenes (parte superior) -->
+    <div class="image-section">
+      <q-carousel
+        v-model="slide"
+        animated
+        arrows
+        navigation
+        infinite
+        height="100%"
+        class="full-height-carousel"
+      >
+        <q-carousel-slide
+          v-for="(imgUrl, index) in pet.imageUrls"
+          :key="index"
+          :name="index"
+          :img-src="imgUrl"
+          class="carousel-slide"
+        />
+      </q-carousel>
+    </div>
+
+    <!-- Sección de detalles de la mascota (parte inferior) -->
+    <div class="details-section">
+      <q-card flat class="details-card">
+        <q-card-section class="q-pb-sm">
+          <div class="text-h4 q-mb-xs text-weight-bold">{{ pet.name }}</div>
+
+          <div class="row items-center q-gutter-sm text-h6 text-grey-8 q-mb-sm">
+            <q-icon name="pets" size="md" />
+            <span class="text-capitalize">{{ pet.species }}</span>
+            <q-icon :name="pet.genre === 'male' ? 'male' : 'female'" size="md" />
+            <span class="text-capitalize">{{ pet.genre }}</span>
+          </div>
+
+          <div class="row items-center q-gutter-sm text-subtitle1">
+            <q-icon name="location_on" size="md" color="primary" />
+            <span class="text-weight-medium">{{ pet.location }}</span>
+            <q-btn flat round dense icon="map" color="primary" size="md" @click="showLocation" />
+          </div>
+        </q-card-section>
+
+        <q-separator />
+
+        <q-card-section class="q-pt-sm">
+          <div class="text-caption text-grey-6 q-mb-xs">Reported by:</div>
+          <div class="text-h6 text-weight-medium q-mb-sm">{{ pet.reportedBy.name }}</div>
+          <q-btn
+            unelevated
+            color="primary"
+            label="Contact"
+            icon="contact_phone"
+            @click="showContactInfo"
+            class="full-width"
+            size="lg"
+          />
+        </q-card-section>
+      </q-card>
+    </div>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { ref } from 'vue';
+import { useQuasar } from 'quasar';
+import type { Pet } from '../../domain/entities/Pet';
+
+interface Props {
+  pet: Pet;
+}
+
+const props = defineProps<Props>();
+const $q = useQuasar();
+
+const slide = ref(0); // Para controlar el slide actual del carrusel
+
+const showLocation = () => {
+  // En una app real, abriría Google Maps o similar
+  $q.dialog({
+    title: 'Location',
+    message: `The pet was found at: ${props.pet.location}.`,
+  });
+};
+
+const showContactInfo = () => {
+  const contact = props.pet.reportedBy.contactInfo;
+  $q.dialog({
+    title: 'Contact Information',
+    message: `You can contact ${props.pet.reportedBy.name} via:\n\nEmail: ${contact.email}\nPhone: ${contact.phone}`,
+    html: true, // para permitir saltos de línea
+  });
+};
+</script>
+
+<style scoped lang="scss">
+.pet-feed-card {
+  height: 100vh;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  background: white;
+}
+
+.image-section {
+  flex: 1;
+  min-height: 60%;
+  position: relative;
+}
+
+.full-height-carousel {
+  height: 100% !important;
+
+  :deep(.q-carousel__slide) {
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+  }
+
+  :deep(.q-carousel__navigation) {
+    bottom: 20px;
+  }
+
+  :deep(.q-carousel__prev-arrow),
+  :deep(.q-carousel__next-arrow) {
+    background: rgba(0, 0, 0, 0.3);
+    color: white;
+    border-radius: 50%;
+  }
+}
+
+.details-section {
+  flex: 0 0 auto;
+  max-height: 40%;
+  overflow-y: auto;
+  background: white;
+  border-top-left-radius: 20px;
+  border-top-right-radius: 20px;
+  margin-top: -20px;
+  position: relative;
+  z-index: 1;
+  box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.details-card {
+  background: transparent;
+  padding: 16px;
+}
+
+@media (max-width: 600px) {
+  .image-section {
+    min-height: 50%;
+  }
+
+  .details-section {
+    max-height: 50%;
+  }
+}
+</style>
+
+================================================
+File: src/presentation/features/list-pets/components/PetListComponent.vue
+================================================
+<template>
+  <div class="row q-col-gutter-md">
+    <div v-if="pets.length === 0" class="col-12 text-center text-grey">No pets found.</div>
+    <div v-for="pet in pets" :key="pet.id" class="col-12 col-sm-6 col-md-4 col-lg-3">
+      <PetCard :pet="pet" />
+    </div>
+  </div>
+</template>
+
+<script setup lang="ts">
+import type { Pet } from 'src/domain/entities/Pet';
+import PetCard from 'src/presentation/components/PetCard.vue';
+
+interface Props {
+  pets: Pet[];
+}
+
+defineProps<Props>();
+</script>
+
+================================================
+File: src/presentation/features/list-pets/store/usePetListStore.ts
+================================================
+import { defineStore } from 'pinia';
+import type { Pet } from '../../../../domain/entities/Pet';
+import dependencies from '../../../../boot/dependencies'; // Importamos nuestras dependencias
+
+interface PetListState {
+  pets: Pet[];
+  isLoading: boolean;
+  error: string | null;
+}
+
+export const usePetListStore = defineStore('petList', {
+  state: (): PetListState => ({
+    pets: [],
+    isLoading: false,
+    error: null,
+  }),
+
+  actions: {
+    async fetchPets() {
+      this.isLoading = true;
+      this.error = null;
+      try {
+        // La store llama al CASO DE USO, no directamente al repositorio.
+        const pets = await dependencies.useCases.listPets.execute();
+        this.pets = pets;
+      } catch (e) {
+        this.error = 'Failed to fetch pets.';
+        console.error(e);
+      } finally {
+        this.isLoading = false;
+      }
+    },
+  },
+});
+
+================================================
+File: src/presentation/layouts/MainLayout.vue
+================================================
+<template>
+  <q-layout view="hHh lpR lFf">
     <q-header elevated>
       <q-toolbar>
-        <q-btn
-          flat
-          dense
-          round
-          icon="menu"
-          aria-label="Menu"
-          @click="toggleLeftDrawer"
-        />
+        <q-btn flat dense round icon="menu" aria-label="Menu" @click="toggleLeftDrawer" />
 
         <q-toolbar-title>
-          Quasar App
-        </q-toolbar-title>
-
-        <div>Quasar v{{ $q.version }}</div>
+          <div class="absolute-center">
+            <q-icon name="pets" />
+            Find Pet
+          </div></q-toolbar-title
+        >
       </q-toolbar>
     </q-header>
 
-    <q-drawer
-      v-model="leftDrawerOpen"
-      show-if-above
-      bordered
-    >
+    <q-drawer v-model="leftDrawerOpen" show-if-above bordered>
       <q-list>
-        <q-item-label
-          header
-        >
-          Essential Links
-        </q-item-label>
+        <q-item-label header> Nav </q-item-label>
 
-        <EssentialLink
-          v-for="link in linksList"
-          :key="link.title"
-          v-bind="link"
-        />
+        <NavLink v-for="link in linksList" :key="link.title" v-bind="link" />
       </q-list>
     </q-drawer>
 
@@ -841,73 +1300,39 @@ File: src/layouts/MainLayout.vue
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import EssentialLink, { type EssentialLinkProps } from 'components/EssentialLink.vue';
+import NavLink, { type NavLinkProps } from 'src/presentation/components/NavLink.vue';
 
-const linksList: EssentialLinkProps[] = [
+const linksList: NavLinkProps[] = [
   {
-    title: 'Docs',
-    caption: 'quasar.dev',
-    icon: 'school',
-    link: 'https://quasar.dev'
+    title: 'Encuentra tu mascota',
+    caption: 'Mascotas encontradas',
+    icon: 'explore',
+    link: '/',
   },
   {
-    title: 'Github',
-    caption: 'github.com/quasarframework',
-    icon: 'code',
-    link: 'https://github.com/quasarframework'
+    title: 'Reporta tu mascota',
+    caption: 'Mascotas perdidas',
+    icon: 'pets',
+    link: '/report-pet/new',
   },
-  {
-    title: 'Discord Chat Channel',
-    caption: 'chat.quasar.dev',
-    icon: 'chat',
-    link: 'https://chat.quasar.dev'
-  },
-  {
-    title: 'Forum',
-    caption: 'forum.quasar.dev',
-    icon: 'record_voice_over',
-    link: 'https://forum.quasar.dev'
-  },
-  {
-    title: 'Twitter',
-    caption: '@quasarframework',
-    icon: 'rss_feed',
-    link: 'https://twitter.quasar.dev'
-  },
-  {
-    title: 'Facebook',
-    caption: '@QuasarFramework',
-    icon: 'public',
-    link: 'https://facebook.quasar.dev'
-  },
-  {
-    title: 'Quasar Awesome',
-    caption: 'Community Quasar projects',
-    icon: 'favorite',
-    link: 'https://awesome.quasar.dev'
-  }
 ];
 
 const leftDrawerOpen = ref(false);
 
-function toggleLeftDrawer () {
+function toggleLeftDrawer() {
   leftDrawerOpen.value = !leftDrawerOpen.value;
 }
 </script>
 
 ================================================
-File: src/pages/ErrorNotFound.vue
+File: src/presentation/pages/ErrorNotFound.vue
 ================================================
 <template>
   <div class="fullscreen bg-blue text-white text-center q-pa-md flex flex-center">
     <div>
-      <div style="font-size: 30vh">
-        404
-      </div>
+      <div style="font-size: 30vh">404</div>
 
-      <div class="text-h2" style="opacity:.4">
-        Oops. Nothing here...
-      </div>
+      <div class="text-h2" style="opacity: 0.4">Oops. Nothing here...</div>
 
       <q-btn
         class="q-mt-xl"
@@ -927,54 +1352,83 @@ File: src/pages/ErrorNotFound.vue
 </script>
 
 ================================================
-File: src/pages/IndexPage.vue
+File: src/presentation/pages/IndexPage.vue
 ================================================
 <template>
-  <q-page class="row items-center justify-evenly">
-    <example-component
-      title="Example component"
-      active
-      :todos="todos"
-      :meta="meta"
-    ></example-component>
+  <!-- Quasar nos da clases para altura y anchura del viewport. 'fit' es una opción -->
+  <!-- 'scroll-snap-type' habilita el snapping. 'y mandatory' fuerza el snap en el eje Y. -->
+  <q-page class="scroll-snap-container bg-grey-2">
+    <div v-if="store.isLoading" class="fullscreen flex flex-center">
+      <q-spinner-dots color="primary" size="50px" />
+    </div>
+
+    <div v-else-if="store.error" class="fullscreen text-negative text-center flex flex-center">
+      <div>
+        <p>{{ store.error }}</p>
+        <q-btn label="Retry" @click="fetch" color="primary" />
+      </div>
+    </div>
+
+    <div
+      v-else-if="store.pets.length === 0"
+      class="fullscreen flex flex-center text-h5 text-grey-7"
+    >
+      No pets found. Come back later!
+    </div>
+
+    <!-- Debug info -->
+    <!-- <div
+      v-if="!store.isLoading && !store.error"
+      class="debug-info fixed-top bg-accent text-white q-pa-sm"
+      style="z-index: 9999"
+    >
+      <p>Pets loaded: {{ store.pets.length }}</p>
+    </div> -->
+
+    <!-- Cada PetFeedCard será un 'snap child' -->
+    <div v-if="!store.isLoading && !store.error && store.pets.length > 0">
+      <PetFeedCard v-for="pet in store.pets" :key="pet.id" :pet="pet" class="scroll-snap-child" />
+    </div>
   </q-page>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
-import type { Todo, Meta } from 'components/models';
-import ExampleComponent from 'components/ExampleComponent.vue';
+import { onMounted } from 'vue';
+import { usePetListStore } from '../features/list-pets/store/usePetListStore';
+import PetFeedCard from '../components/PetFeedCard.vue';
 
-const todos = ref<Todo[]>([
-  {
-    id: 1,
-    content: 'ct1'
-  },
-  {
-    id: 2,
-    content: 'ct2'
-  },
-  {
-    id: 3,
-    content: 'ct3'
-  },
-  {
-    id: 4,
-    content: 'ct4'
-  },
-  {
-    id: 5,
-    content: 'ct5'
+const store = usePetListStore();
+
+const fetch = () => {
+  void store.fetchPets();
+};
+
+onMounted(() => {
+  if (store.pets.length === 0) {
+    fetch();
   }
-]);
-
-const meta = ref<Meta>({
-  totalCount: 1200
 });
 </script>
 
+<style lang="scss">
+.scroll-snap-container {
+  // Ocupa toda la altura de la página y permite scroll vertical
+  height: 100vh;
+  overflow-y: auto;
+  // Propiedades mágicas para el scroll snap
+  scroll-snap-type: y mandatory;
+}
+
+.scroll-snap-child {
+  // Cada hijo debe ocupar toda la altura del contenedor para un snap perfecto
+  height: 100vh;
+  // Alinea el snap al inicio del elemento
+  scroll-snap-align: start;
+}
+</style>
+
 ================================================
-File: src/router/index.ts
+File: src/presentation/router/index.ts
 ================================================
 import { defineRouter } from '#q-app/wrappers';
 import {
@@ -997,7 +1451,9 @@ import routes from './routes';
 export default defineRouter(function (/* { store, ssrContext } */) {
   const createHistory = process.env.SERVER
     ? createMemoryHistory
-    : (process.env.VUE_ROUTER_MODE === 'history' ? createWebHistory : createWebHashHistory);
+    : process.env.VUE_ROUTER_MODE === 'history'
+      ? createWebHistory
+      : createWebHashHistory;
 
   const Router = createRouter({
     scrollBehavior: () => ({ left: 0, top: 0 }),
@@ -1013,57 +1469,32 @@ export default defineRouter(function (/* { store, ssrContext } */) {
 });
 
 ================================================
-File: src/router/routes.ts
+File: src/presentation/router/routes.ts
 ================================================
 import type { RouteRecordRaw } from 'vue-router';
 
 const routes: RouteRecordRaw[] = [
   {
     path: '/',
-    component: () => import('layouts/MainLayout.vue'),
-    children: [{ path: '', component: () => import('pages/IndexPage.vue') }],
+    component: () => import('src/presentation/layouts/MainLayout.vue'),
+    children: [{ path: '', component: () => import('src/presentation/pages/IndexPage.vue') }],
   },
 
   // Always leave this as last one,
   // but you can also remove it
   {
     path: '/:catchAll(.*)*',
-    component: () => import('pages/ErrorNotFound.vue'),
+    component: () => import('src/presentation/pages/ErrorNotFound.vue'),
   },
 ];
 
 export default routes;
 
 ================================================
-File: src/stores/example-store.ts
+File: src/presentation/store/index.ts
 ================================================
-import { defineStore, acceptHMRUpdate } from 'pinia';
-
-export const useCounterStore = defineStore('counter', {
-  state: () => ({
-    counter: 0,
-  }),
-
-  getters: {
-    doubleCount: (state) => state.counter * 2,
-  },
-
-  actions: {
-    increment() {
-      this.counter++;
-    },
-  },
-});
-
-if (import.meta.hot) {
-  import.meta.hot.accept(acceptHMRUpdate(useCounterStore, import.meta.hot));
-}
-
-================================================
-File: src/stores/index.ts
-================================================
-import { defineStore } from '#q-app/wrappers'
-import { createPinia } from 'pinia'
+import { defineStore } from '#q-app/wrappers';
+import { createPinia } from 'pinia';
 
 /*
  * When adding new properties to stores, you should also
@@ -1087,13 +1518,13 @@ declare module 'pinia' {
  */
 
 export default defineStore((/* { ssrContext } */) => {
-  const pinia = createPinia()
+  const pinia = createPinia();
 
   // You can add Pinia plugins here
   // pinia.use(SomePiniaPlugin)
 
-  return pinia
-})
+  return pinia;
+});
 
 ================================================
 File: src/App.vue
@@ -1306,7 +1737,7 @@ File: package.json
   "version": "0.0.1",
   "description": "Post and discover lost or found pets in your area with photos, location, and all essential information.",
   "productName": "Pet SOS",
-  "author": "rromero <rromero@heligrafics.net>",
+  "author": "richardmoore <richard.romero@hotmail.cl>",
   "type": "module",
   "private": true,
   "scripts": {
@@ -1396,14 +1827,10 @@ export default defineConfig((/* ctx */) => {
     // app boot file (/src/boot)
     // --> boot files are part of "main.js"
     // https://v2.quasar.dev/quasar-cli-vite/boot-files
-    boot: [
-      'axios'
-    ],
+    boot: ['axios', 'dependencies'],
 
     // https://v2.quasar.dev/quasar-cli-vite/quasar-config-file#css
-    css: [
-      'app.scss'
-    ],
+    css: ['app.scss'],
 
     // https://github.com/quasarframework/quasar/tree/dev/extras
     extras: [
@@ -1422,14 +1849,28 @@ export default defineConfig((/* ctx */) => {
     // Full list of options: https://v2.quasar.dev/quasar-cli-vite/quasar-config-file#build
     build: {
       target: {
-        browser: [ 'es2022', 'firefox115', 'chrome115', 'safari14' ],
-        node: 'node20'
+        browser: ['es2022', 'firefox115', 'chrome115', 'safari14'],
+        node: 'node20',
       },
 
       typescript: {
         strict: true,
-        vueShim: true
-        // extendTsConfig (tsConfig) {}
+        vueShim: true,
+        extendTsConfig(tsConfig) {
+          // Nos aseguramos de que compilerOptions y paths existan para evitar errores
+          if (!tsConfig.compilerOptions) {
+            tsConfig.compilerOptions = {};
+          }
+          if (!tsConfig.compilerOptions.paths) {
+            tsConfig.compilerOptions.paths = {};
+          }
+
+          // Usamos Object.assign para AÑADIR nuestro alias a los ya existentes,
+          // en lugar de sobreescribir todo el objeto 'paths'.
+          Object.assign(tsConfig.compilerOptions.paths, {
+            '@/*': ['./../src/*'],
+          });
+        },
       },
 
       vueRouterMode: 'hash', // available values: 'hash', 'history'
@@ -1450,22 +1891,26 @@ export default defineConfig((/* ctx */) => {
 
       // extendViteConf (viteConf) {},
       // viteVuePluginOptions: {},
-      
+
       vitePlugins: [
-        ['vite-plugin-checker', {
-          vueTsc: true,
-          eslint: {
-            lintCommand: 'eslint -c ./eslint.config.js "./src*/**/*.{ts,js,mjs,cjs,vue}"',
-            useFlatConfig: true
-          }
-        }, { server: false }]
-      ]
+        [
+          'vite-plugin-checker',
+          {
+            vueTsc: true,
+            eslint: {
+              lintCommand: 'eslint -c ./eslint.config.js "./src*/**/*.{ts,js,mjs,cjs,vue}"',
+              useFlatConfig: true,
+            },
+          },
+          { server: false },
+        ],
+      ],
     },
 
     // Full list of options: https://v2.quasar.dev/quasar-cli-vite/quasar-config-file#devserver
     devServer: {
       // https: true,
-      open: true // opens browser window automatically
+      open: true, // opens browser window automatically
     },
 
     // https://v2.quasar.dev/quasar-cli-vite/quasar-config-file#framework
@@ -1483,7 +1928,7 @@ export default defineConfig((/* ctx */) => {
       // directives: [],
 
       // Quasar plugins
-      plugins: []
+      plugins: [],
     },
 
     // animations: 'all', // --- includes all animations
@@ -1491,25 +1936,25 @@ export default defineConfig((/* ctx */) => {
     animations: [],
 
     // https://v2.quasar.dev/quasar-cli-vite/quasar-config-file#sourcefiles
-    // sourceFiles: {
-    //   rootComponent: 'src/App.vue',
-    //   router: 'src/router/index',
-    //   store: 'src/store/index',
-    //   pwaRegisterServiceWorker: 'src-pwa/register-service-worker',
-    //   pwaServiceWorker: 'src-pwa/custom-service-worker',
-    //   pwaManifestFile: 'src-pwa/manifest.json',
-    //   electronMain: 'src-electron/electron-main',
-    //   electronPreload: 'src-electron/electron-preload'
-    //   bexManifestFile: 'src-bex/manifest.json
-    // },
+    sourceFiles: {
+      rootComponent: 'src/App.vue',
+      router: 'src/presentation/router/index',
+      store: 'src/presentation/store/index',
+      // pwaRegisterServiceWorker: 'src-pwa/register-service-worker',
+      // pwaServiceWorker: 'src-pwa/custom-service-worker',
+      // pwaManifestFile: 'src-pwa/manifest.json',
+      // electronMain: 'src-electron/electron-main',
+      // electronPreload: 'src-electron/electron-preload'
+      // bexManifestFile: 'src-bex/manifest.json
+    },
 
     // https://v2.quasar.dev/quasar-cli-vite/developing-ssr/configuring-ssr
     ssr: {
       prodPort: 3000, // The default port that the production server should use
-                      // (gets superseded if process.env.PORT is specified at runtime)
+      // (gets superseded if process.env.PORT is specified at runtime)
 
       middlewares: [
-        'render' // keep this as last one
+        'render', // keep this as last one
       ],
 
       // extendPackageJson (json) {},
@@ -1520,7 +1965,7 @@ export default defineConfig((/* ctx */) => {
       // manualStoreHydration: true,
       // manualPostHydrationTrigger: true,
 
-      pwa: false
+      pwa: false,
       // pwaOfflineHtmlFilename: 'offline.html', // do NOT use index.html as name!
 
       // pwaExtendGenerateSWOptions (cfg) {},
@@ -1529,7 +1974,7 @@ export default defineConfig((/* ctx */) => {
 
     // https://v2.quasar.dev/quasar-cli-vite/developing-pwa/configuring-pwa
     pwa: {
-      workboxMode: 'GenerateSW' // 'GenerateSW' or 'InjectManifest'
+      workboxMode: 'GenerateSW', // 'GenerateSW' or 'InjectManifest'
       // swFilename: 'sw.js',
       // manifestFilename: 'manifest.json',
       // extendManifestJson (json) {},
@@ -1547,7 +1992,7 @@ export default defineConfig((/* ctx */) => {
 
     // Full list of options: https://v2.quasar.dev/quasar-cli-vite/developing-capacitor-apps/configuring-capacitor
     capacitor: {
-      hideSplashscreen: true
+      hideSplashscreen: true,
     },
 
     // Full list of options: https://v2.quasar.dev/quasar-cli-vite/developing-electron-apps/configuring-electron
@@ -1558,7 +2003,7 @@ export default defineConfig((/* ctx */) => {
       // extendPackageJson (json) {},
 
       // Electron preload scripts (if any) from /src-electron, WITHOUT file extension
-      preloadScripts: [ 'electron-preload' ],
+      preloadScripts: ['electron-preload'],
 
       // specify the debugging port to use for the Electron app when running in development mode
       inspectPort: 5858,
@@ -1567,13 +2012,11 @@ export default defineConfig((/* ctx */) => {
 
       packager: {
         // https://github.com/electron-userland/electron-packager/blob/master/docs/api.md#options
-
         // OS X / Mac App Store
         // appBundleId: '',
         // appCategoryType: '',
         // osxSign: '',
         // protocol: 'myapp://path',
-
         // Windows only
         // win32metadata: { ... }
       },
@@ -1581,8 +2024,8 @@ export default defineConfig((/* ctx */) => {
       builder: {
         // https://www.electron.build/configuration/configuration
 
-        appId: 'pet-sos'
-      }
+        appId: 'pet-sos',
+      },
     },
 
     // Full list of options: https://v2.quasar.dev/quasar-cli-vite/developing-browser-extensions/configuring-bex
@@ -1598,9 +2041,9 @@ export default defineConfig((/* ctx */) => {
        *
        * @example [ 'my-script.ts', 'sub-folder/my-other-script.js' ]
        */
-      extraScripts: []
-    }
-  }
+      extraScripts: [],
+    },
+  };
 });
 
 ================================================
@@ -1651,6 +2094,6 @@ See [Configuring quasar.config.js](https://v2.quasar.dev/quasar-cli-vite/quasar-
 File: tsconfig.json
 ================================================
 {
-  "extends": "./.quasar/tsconfig.json"
+  "extends": "./.quasar/tsconfig.json",
 }
 

@@ -1,6 +1,6 @@
 <template>
   <q-card>
-    <q-img :src="pet.imageUrl" :ratio="1" />
+    <q-img :src="pet.imageUrls[0]" :ratio="1" />
     <q-card-section>
       <div class="text-h6">
         {{ pet.name }}
@@ -18,7 +18,7 @@
 </template>
 
 <script setup lang="ts">
-import type { Pet } from 'src/domain/entities/Pet';
+import type { Pet } from '../../domain/entities/Pet';
 
 interface Props {
   pet: Pet;

@@ -7,7 +7,7 @@ export interface Pet {
   status: 'lost' | 'found';
   location: string;
   description: string;
-  imageUrl: string[];
+  imageUrls: string[];
   reportedAt: Date;
   reportedBy: {
     id: string;

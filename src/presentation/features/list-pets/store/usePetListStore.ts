@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia';
-import type { Pet } from 'src/domain/entities/Pet';
-import dependencies from 'src/boot/dependencies'; // Importamos nuestras dependencias
+import type { Pet } from '../../../../domain/entities/Pet';
+import dependencies from '../../../../boot/dependencies'; // Importamos nuestras dependencias
 
 interface PetListState {
   pets: Pet[];

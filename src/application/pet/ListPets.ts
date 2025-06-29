@@ -1,5 +1,5 @@
-import type { IPetRepository } from 'src/domain/repositories/IPetRepository';
-import type { Pet } from 'src/domain/entities/Pet';
+import type { IPetRepository } from '../../domain/repositories/IPetRepository';
+import type { Pet } from '../../domain/entities/Pet';
 
 // Este es el Caso de Uso. Su única responsabilidad es listar las mascotas.
 export class ListPets {

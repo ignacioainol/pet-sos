@@ -22,6 +22,11 @@ export class AxiosPetRepository implements IPetRepository {
     }
   }
 
+  async save(pet: Pet): Promise<Pet> {
+    const { data } = await api.post<PetApiResponseDTO>('/pets', pet);
+    return this.mapToDomain(data);
+  }
+
   // El traductor: recibe un DTO y devuelve una Entidad de Dominio.
   // Ahora es totalmente seguro a nivel de tipos.
   private mapToDomain(apiPet: PetApiResponseDTO): Pet {
@@ -33,7 +38,7 @@ export class AxiosPetRepository implements IPetRepository {
       status: apiPet.status,
       location: apiPet.location,
       description: apiPet.description,
-      imageUrl: apiPet.image_url,
+      imageUrls: apiPet.image_urls,
       reportedAt: new Date(apiPet.reported_at),
       reportedBy: {
         ...apiPet.reported_by,

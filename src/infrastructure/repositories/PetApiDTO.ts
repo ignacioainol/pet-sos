@@ -6,7 +6,7 @@ export interface PetApiResponseDTO {
   status: 'lost' | 'found';
   location: string;
   description: string;
-  image_url: string[];
+  image_urls: string[];
   reported_at: string;
   reported_by: {
     id: string;

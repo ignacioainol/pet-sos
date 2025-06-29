@@ -16,6 +16,11 @@
     <q-drawer v-model="leftDrawerOpen" show-if-above bordered>
       <q-list>
         <q-item-label header> Nav </q-item-label>
+        <q-page-sticky position="bottom-right" :offset="[30, 50]">
+          <q-btn fab icon="add" color="accent" to="/report-pet/new">
+            <q-tooltip>Reportar una mascota</q-tooltip>
+          </q-btn>
+        </q-page-sticky>
 
         <NavLink v-for="link in linksList" :key="link.title" v-bind="link" />
       </q-list>
