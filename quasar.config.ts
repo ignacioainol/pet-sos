@@ -11,7 +11,7 @@ export default defineConfig((/* ctx */) => {
     // app boot file (/src/boot)
     // --> boot files are part of "main.js"
     // https://v2.quasar.dev/quasar-cli-vite/boot-files
-    boot: ['axios'],
+    boot: ['axios', 'dependencies'],
 
     // https://v2.quasar.dev/quasar-cli-vite/quasar-config-file#css
     css: ['app.scss'],
@@ -40,7 +40,21 @@ export default defineConfig((/* ctx */) => {
       typescript: {
         strict: true,
         vueShim: true,
-        // extendTsConfig (tsConfig) {}
+        extendTsConfig(tsConfig) {
+          // Nos aseguramos de que compilerOptions y paths existan para evitar errores
+          if (!tsConfig.compilerOptions) {
+            tsConfig.compilerOptions = {};
+          }
+          if (!tsConfig.compilerOptions.paths) {
+            tsConfig.compilerOptions.paths = {};
+          }
+
+          // Usamos Object.assign para AÑADIR nuestro alias a los ya existentes,
+          // en lugar de sobreescribir todo el objeto 'paths'.
+          Object.assign(tsConfig.compilerOptions.paths, {
+            '@/*': ['./../src/*'],
+          });
+        },
       },
 
       vueRouterMode: 'hash', // available values: 'hash', 'history'

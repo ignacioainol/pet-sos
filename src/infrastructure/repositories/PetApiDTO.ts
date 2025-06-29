@@ -1,5 +1,4 @@
-// This interfaces Pet entity represents a pet that can be reported as lost or found.
-export interface Pet {
+export interface PetApiResponseDTO {
   id: string;
   name: string;
   species: 'dog' | 'cat' | 'other';
@@ -7,17 +6,17 @@ export interface Pet {
   status: 'lost' | 'found';
   location: string;
   description: string;
-  imageUrl: string[];
-  reportedAt: Date;
-  reportedBy: {
+  image_url: string[];
+  reported_at: string;
+  reported_by: {
     id: string;
     name: string;
-    contactInfo: {
+    contact_info: {
       email: string;
       phone: string;
     };
   };
-  isActive: boolean;
-  createdAt: Date;
-  updatedAt: Date;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
 }

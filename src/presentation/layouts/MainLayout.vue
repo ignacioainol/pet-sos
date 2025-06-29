@@ -36,7 +36,7 @@ const linksList: NavLinkProps[] = [
     title: 'Encuentra tu mascota',
     caption: 'Mascotas encontradas',
     icon: 'explore',
-    link: '/list-pets',
+    link: '/',
   },
   {
     title: 'Reporta tu mascota',
