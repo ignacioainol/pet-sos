@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "description": "Post and discover lost or found pets in your area with photos, location, and all essential information.",
   "productName": "Pet SOS",
-  "author": "rromero <rromero@heligrafics.net>",
+  "author": "richardmoore <richard.romero@hotmail.cl>",
   "type": "module",
   "private": true,
   "scripts": {

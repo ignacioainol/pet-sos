@@ -1,0 +1,1656 @@
+Directory structure:
+└── pet-sos/
+    ├── .quasar/
+    │   ├── dev-spa/
+    │   │   ├── app.js
+    │   │   ├── client-entry.js
+    │   │   ├── client-prefetch.js
+    │   │   └── quasar-user-options.js
+    │   ├── feature-flags.d.ts
+    │   ├── pinia.d.ts
+    │   ├── quasar.d.ts
+    │   ├── shims-vue.d.ts
+    │   └── tsconfig.json
+    ├── public/
+    │   ├── icons/
+    │   │   ├── favicon-128x128.png (non-text)
+    │   │   ├── favicon-16x16.png (non-text)
+    │   │   ├── favicon-32x32.png (non-text)
+    │   │   └── favicon-96x96.png (non-text)
+    │   └── favicon.ico (non-text)
+    ├── src/
+    │   ├── assets/
+    │   │   └── quasar-logo-vertical.svg
+    │   ├── boot/
+    │   │   ├── .gitkeep
+    │   │   └── axios.ts
+    │   ├── components/
+    │   │   ├── EssentialLink.vue
+    │   │   ├── ExampleComponent.vue
+    │   │   └── models.ts
+    │   ├── css/
+    │   │   ├── app.scss
+    │   │   └── quasar.variables.scss
+    │   ├── layouts/
+    │   │   └── MainLayout.vue
+    │   ├── pages/
+    │   │   ├── ErrorNotFound.vue
+    │   │   └── IndexPage.vue
+    │   ├── router/
+    │   │   ├── index.ts
+    │   │   └── routes.ts
+    │   ├── stores/
+    │   │   ├── example-store.ts
+    │   │   └── index.ts
+    │   ├── App.vue
+    │   └── env.d.ts
+    ├── .editorconfig
+    ├── .gitignore
+    ├── .npmrc
+    ├── .prettierrc.json
+    ├── eslint.config.js
+    ├── index.html
+    ├── package.json
+    ├── postcss.config.js
+    ├── quasar.config.ts
+    ├── README.md
+    └── tsconfig.json
+
+================================================
+File: .quasar/dev-spa/app.js
+================================================
+/* eslint-disable */
+/**
+ * THIS FILE IS GENERATED AUTOMATICALLY.
+ * DO NOT EDIT.
+ *
+ * You are probably looking on adding startup/initialization code.
+ * Use "quasar new boot <name>" and add it there.
+ * One boot file per concern. Then reference the file(s) in quasar.config file > boot:
+ * boot: ['file', ...] // do not add ".js" extension to it.
+ *
+ * Boot files are your "main.js"
+ **/
+
+
+
+
+
+import { Quasar } from 'quasar'
+import { markRaw } from 'vue'
+import RootComponent from 'app/src/App.vue'
+
+import createStore from 'app/src/stores/index'
+import createRouter from 'app/src/router/index'
+
+
+
+
+
+export default async function (createAppFn, quasarUserOptions) {
+  
+
+  // Create the app instance.
+  // Here we inject into it the Quasar UI, the router & possibly the store.
+  const app = createAppFn(RootComponent)
+
+  
+  app.config.performance = true
+  
+
+  app.use(Quasar, quasarUserOptions)
+
+  
+
+  
+    const store = typeof createStore === 'function'
+      ? await createStore({})
+      : createStore
+
+    
+      app.use(store)
+
+      
+    
+  
+
+  const router = markRaw(
+    typeof createRouter === 'function'
+      ? await createRouter({store})
+      : createRouter
+  )
+
+  
+    // make router instance available in store
+    
+      store.use(({ store }) => { store.router = router })
+    
+  
+
+  // Expose the app, the router and the store.
+  // Note that we are not mounting the app here, since bootstrapping will be
+  // different depending on whether we are in a browser or on the server.
+  return {
+    app,
+    store,
+    router
+  }
+}
+
+================================================
+File: .quasar/dev-spa/client-entry.js
+================================================
+/* eslint-disable */
+/**
+ * THIS FILE IS GENERATED AUTOMATICALLY.
+ * DO NOT EDIT.
+ *
+ * You are probably looking on adding startup/initialization code.
+ * Use "quasar new boot <name>" and add it there.
+ * One boot file per concern. Then reference the file(s) in quasar.config file > boot:
+ * boot: ['file', ...] // do not add ".js" extension to it.
+ *
+ * Boot files are your "main.js"
+ **/
+
+
+import { createApp } from 'vue'
+
+
+
+
+
+
+
+import '@quasar/extras/roboto-font/roboto-font.css'
+
+import '@quasar/extras/material-icons/material-icons.css'
+
+
+
+
+// We load Quasar stylesheet file
+import 'quasar/dist/quasar.sass'
+
+
+
+
+import 'src/css/app.scss'
+
+
+import createQuasarApp from './app.js'
+import quasarUserOptions from './quasar-user-options.js'
+
+
+
+
+
+
+console.info('[Quasar] Running SPA.')
+
+
+const publicPath = `/`
+
+async function start ({
+  app,
+  router
+  , store
+}, bootFiles) {
+  
+  let hasRedirected = false
+  const getRedirectUrl = url => {
+    try { return router.resolve(url).href }
+    catch (err) {}
+
+    return Object(url) === url
+      ? null
+      : url
+  }
+  const redirect = url => {
+    hasRedirected = true
+
+    if (typeof url === 'string' && /^https?:\/\//.test(url)) {
+      window.location.href = url
+      return
+    }
+
+    const href = getRedirectUrl(url)
+
+    // continue if we didn't fail to resolve the url
+    if (href !== null) {
+      window.location.href = href
+      window.location.reload()
+    }
+  }
+
+  const urlPath = window.location.href.replace(window.location.origin, '')
+
+  for (let i = 0; hasRedirected === false && i < bootFiles.length; i++) {
+    try {
+      await bootFiles[i]({
+        app,
+        router,
+        store,
+        ssrContext: null,
+        redirect,
+        urlPath,
+        publicPath
+      })
+    }
+    catch (err) {
+      if (err && err.url) {
+        redirect(err.url)
+        return
+      }
+
+      console.error('[Quasar] boot error:', err)
+      return
+    }
+  }
+
+  if (hasRedirected === true) return
+  
+
+  app.use(router)
+
+  
+
+    
+
+    
+      app.mount('#q-app')
+    
+  
+
+}
+
+createQuasarApp(createApp, quasarUserOptions)
+
+  .then(app => {
+    // eventually remove this when Cordova/Capacitor/Electron support becomes old
+    const [ method, mapFn ] = Promise.allSettled !== void 0
+      ? [
+        'allSettled',
+        bootFiles => bootFiles.map(result => {
+          if (result.status === 'rejected') {
+            console.error('[Quasar] boot error:', result.reason)
+            return
+          }
+          return result.value.default
+        })
+      ]
+      : [
+        'all',
+        bootFiles => bootFiles.map(entry => entry.default)
+      ]
+
+    return Promise[ method ]([
+      
+      import('boot/axios')
+      
+    ]).then(bootFiles => {
+      const boot = mapFn(bootFiles).filter(entry => typeof entry === 'function')
+      start(app, boot)
+    })
+  })
+
+
+================================================
+File: .quasar/dev-spa/client-prefetch.js
+================================================
+/* eslint-disable */
+/**
+ * THIS FILE IS GENERATED AUTOMATICALLY.
+ * DO NOT EDIT.
+ *
+ * You are probably looking on adding startup/initialization code.
+ * Use "quasar new boot <name>" and add it there.
+ * One boot file per concern. Then reference the file(s) in quasar.config file > boot:
+ * boot: ['file', ...] // do not add ".js" extension to it.
+ *
+ * Boot files are your "main.js"
+ **/
+
+
+
+import App from 'app/src/App.vue'
+let appPrefetch = typeof App.preFetch === 'function'
+  ? App.preFetch
+  : (
+    // Class components return the component options (and the preFetch hook) inside __c property
+    App.__c !== void 0 && typeof App.__c.preFetch === 'function'
+      ? App.__c.preFetch
+      : false
+    )
+
+
+function getMatchedComponents (to, router) {
+  const route = to
+    ? (to.matched ? to : router.resolve(to).route)
+    : router.currentRoute.value
+
+  if (!route) { return [] }
+
+  const matched = route.matched.filter(m => m.components !== void 0)
+
+  if (matched.length === 0) { return [] }
+
+  return Array.prototype.concat.apply([], matched.map(m => {
+    return Object.keys(m.components).map(key => {
+      const comp = m.components[key]
+      return {
+        path: m.path,
+        c: comp
+      }
+    })
+  }))
+}
+
+export function addPreFetchHooks ({ router, store, publicPath }) {
+  // Add router hook for handling preFetch.
+  // Doing it after initial route is resolved so that we don't double-fetch
+  // the data that we already have. Using router.beforeResolve() so that all
+  // async components are resolved.
+  router.beforeResolve((to, from, next) => {
+    const
+      urlPath = window.location.href.replace(window.location.origin, ''),
+      matched = getMatchedComponents(to, router),
+      prevMatched = getMatchedComponents(from, router)
+
+    let diffed = false
+    const preFetchList = matched
+      .filter((m, i) => {
+        return diffed || (diffed = (
+          !prevMatched[i] ||
+          prevMatched[i].c !== m.c ||
+          m.path.indexOf('/:') > -1 // does it has params?
+        ))
+      })
+      .filter(m => m.c !== void 0 && (
+        typeof m.c.preFetch === 'function'
+        // Class components return the component options (and the preFetch hook) inside __c property
+        || (m.c.__c !== void 0 && typeof m.c.__c.preFetch === 'function')
+      ))
+      .map(m => m.c.__c !== void 0 ? m.c.__c.preFetch : m.c.preFetch)
+
+    
+    if (appPrefetch !== false) {
+      preFetchList.unshift(appPrefetch)
+      appPrefetch = false
+    }
+    
+
+    if (preFetchList.length === 0) {
+      return next()
+    }
+
+    let hasRedirected = false
+    const redirect = url => {
+      hasRedirected = true
+      next(url)
+    }
+    const proceed = () => {
+      
+      if (hasRedirected === false) { next() }
+    }
+
+    
+
+    preFetchList.reduce(
+      (promise, preFetch) => promise.then(() => hasRedirected === false && preFetch({
+        store,
+        currentRoute: to,
+        previousRoute: from,
+        redirect,
+        urlPath,
+        publicPath
+      })),
+      Promise.resolve()
+    )
+    .then(proceed)
+    .catch(e => {
+      console.error(e)
+      proceed()
+    })
+  })
+}
+
+================================================
+File: .quasar/dev-spa/quasar-user-options.js
+================================================
+/* eslint-disable */
+/**
+ * THIS FILE IS GENERATED AUTOMATICALLY.
+ * DO NOT EDIT.
+ *
+ * You are probably looking on adding startup/initialization code.
+ * Use "quasar new boot <name>" and add it there.
+ * One boot file per concern. Then reference the file(s) in quasar.config file > boot:
+ * boot: ['file', ...] // do not add ".js" extension to it.
+ *
+ * Boot files are your "main.js"
+ **/
+
+
+
+
+
+export default { config: {} }
+
+
+================================================
+File: .quasar/feature-flags.d.ts
+================================================
+/* eslint-disable */
+import "quasar/dist/types/feature-flag.d.ts";
+
+declare module "quasar/dist/types/feature-flag.d.ts" {
+  interface QuasarFeatureFlags {
+    store: true;
+  }
+}
+
+================================================
+File: .quasar/pinia.d.ts
+================================================
+/* eslint-disable */
+import { Router } from 'vue-router';
+
+declare module 'pinia' {
+  export interface PiniaCustomProperties {
+    readonly router: Router;
+  }
+}
+
+================================================
+File: .quasar/quasar.d.ts
+================================================
+/* eslint-disable */
+/// <reference types="@quasar/app-vite" />
+
+/// <reference types="vite/client" />
+
+================================================
+File: .quasar/shims-vue.d.ts
+================================================
+/* eslint-disable */
+declare module '*.vue' {
+  import { DefineComponent } from 'vue';
+  const component: DefineComponent;
+  export default component;
+}
+
+================================================
+File: .quasar/tsconfig.json
+================================================
+{
+  "compilerOptions": {
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "target": "esnext",
+    "allowJs": true,
+    "resolveJsonModule": true,
+    "moduleDetection": "force",
+    "isolatedModules": true,
+    "module": "preserve",
+    "noEmit": true,
+    "lib": [
+      "esnext",
+      "dom",
+      "dom.iterable"
+    ],
+    "strict": true,
+    "allowUnreachableCode": false,
+    "allowUnusedLabels": false,
+    "noImplicitOverride": true,
+    "exactOptionalPropertyTypes": true,
+    "noUncheckedIndexedAccess": true,
+    "paths": {
+      "src": [
+        "./../src"
+      ],
+      "src/*": [
+        "./../src/*"
+      ],
+      "app": [
+        "./.."
+      ],
+      "app/*": [
+        "./../*"
+      ],
+      "components": [
+        "./../src/components"
+      ],
+      "components/*": [
+        "./../src/components/*"
+      ],
+      "layouts": [
+        "./../src/layouts"
+      ],
+      "layouts/*": [
+        "./../src/layouts/*"
+      ],
+      "pages": [
+        "./../src/pages"
+      ],
+      "pages/*": [
+        "./../src/pages/*"
+      ],
+      "assets": [
+        "./../src/assets"
+      ],
+      "assets/*": [
+        "./../src/assets/*"
+      ],
+      "boot": [
+        "./../src/boot"
+      ],
+      "boot/*": [
+        "./../src/boot/*"
+      ],
+      "stores": [
+        "./../src/stores"
+      ],
+      "stores/*": [
+        "./../src/stores/*"
+      ],
+      "#q-app": [
+        "./../node_modules/@quasar/app-vite/types/index.d.ts"
+      ],
+      "#q-app/wrappers": [
+        "./../node_modules/@quasar/app-vite/types/app-wrappers.d.ts"
+      ],
+      "#q-app/bex/background": [
+        "./../node_modules/@quasar/app-vite/types/bex/entrypoints/background.d.ts"
+      ],
+      "#q-app/bex/content": [
+        "./../node_modules/@quasar/app-vite/types/bex/entrypoints/content.d.ts"
+      ],
+      "#q-app/bex/private/bex-bridge": [
+        "./../node_modules/@quasar/app-vite/types/bex/bex-bridge.d.ts"
+      ]
+    }
+  },
+  "include": [
+    "./**/*.d.ts",
+    "./../**/*"
+  ],
+  "exclude": [
+    "./../dist",
+    "./../node_modules",
+    "./../src-capacitor",
+    "./../src-cordova",
+    "./../quasar.config.*.temporary.compiled*"
+  ]
+}
+
+================================================
+File: public/icons/favicon-128x128.png (non-text - content not included)
+================================================
+
+
+================================================
+File: public/icons/favicon-16x16.png (non-text - content not included)
+================================================
+
+
+================================================
+File: public/icons/favicon-32x32.png (non-text - content not included)
+================================================
+
+
+================================================
+File: public/icons/favicon-96x96.png (non-text - content not included)
+================================================
+
+
+================================================
+File: public/favicon.ico (non-text - content not included)
+================================================
+
+
+================================================
+File: src/assets/quasar-logo-vertical.svg
+================================================
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 356 360">
+	<path
+		d="M43.4 303.4c0 3.8-2.3 6.3-7.1 6.3h-15v-22h14.4c4.3 0 6.2 2.2 6.2 5.2 0 2.6-1.5 4.4-3.4 5 2.8.4 4.9 2.5 4.9 5.5zm-8-13H24.1v6.9H35c2.1 0 4-1.3 4-3.8 0-2.2-1.3-3.1-3.7-3.1zm5.1 12.6c0-2.3-1.8-3.7-4-3.7H24.2v7.7h11.7c3.4 0 4.6-1.8 4.6-4zm36.3 4v2.7H56v-22h20.6v2.7H58.9v6.8h14.6v2.3H58.9v7.5h17.9zm23-5.8v8.5H97v-8.5l-11-13.4h3.4l8.9 11 8.8-11h3.4l-10.8 13.4zm19.1-1.8V298c0-7.9 5.2-10.7 12.7-10.7 7.5 0 13 2.8 13 10.7v1.4c0 7.9-5.5 10.8-13 10.8s-12.7-3-12.7-10.8zm22.7 0V298c0-5.7-3.9-8-10-8-6 0-9.8 2.3-9.8 8v1.4c0 5.8 3.8 8.1 9.8 8.1 6 0 10-2.3 10-8.1zm37.2-11.6v21.9h-2.9l-15.8-17.9v17.9h-2.8v-22h3l15.6 18v-18h2.9zm37.9 10.2v1.3c0 7.8-5.2 10.4-12.4 10.4H193v-22h11.2c7.2 0 12.4 2.8 12.4 10.3zm-3 0c0-5.3-3.3-7.6-9.4-7.6h-8.4V307h8.4c6 0 9.5-2 9.5-7.7V298zm50.8-7.6h-9.7v19.3h-3v-19.3h-9.7v-2.6h22.4v2.6zm34.4-2.6v21.9h-3v-10.1h-16.8v10h-2.8v-21.8h2.8v9.2H296v-9.2h2.9zm34.9 19.2v2.7h-20.7v-22h20.6v2.7H316v6.8h14.5v2.3H316v7.5h17.8zM24 340.2v7.3h13.9v2.4h-14v9.6H21v-22h20v2.7H24zm41.5 11.4h-9.8v7.9H53v-22h13.3c5.1 0 8 1.9 8 6.8 0 3.7-2 6.3-5.6 7l6 8.2h-3.3l-5.8-8zm-9.8-2.6H66c3.1 0 5.3-1.5 5.3-4.7 0-3.3-2.2-4.1-5.3-4.1H55.7v8.8zm47.9 6.2H89l-2 4.3h-3.2l10.7-22.2H98l10.7 22.2h-3.2l-2-4.3zm-1-2.3l-6.3-13-6 13h12.2zm46.3-15.3v21.9H146v-17.2L135.7 358h-2.1l-10.2-15.6v17h-2.8v-21.8h3l11 16.9 11.3-17h3zm35 19.3v2.6h-20.7v-22h20.6v2.7H166v6.8h14.5v2.3H166v7.6h17.8zm47-19.3l-8.3 22h-3l-7.1-18.6-7 18.6h-3l-8.2-22h3.3L204 356l6.8-18.5h3.4L221 356l6.6-18.5h3.3zm10 11.6v-1.4c0-7.8 5.2-10.7 12.7-10.7 7.6 0 13 2.9 13 10.7v1.4c0 7.9-5.4 10.8-13 10.8-7.5 0-12.7-3-12.7-10.8zm22.8 0v-1.4c0-5.7-4-8-10-8s-9.9 2.3-9.9 8v1.4c0 5.8 3.8 8.2 9.8 8.2 6.1 0 10-2.4 10-8.2zm28.3 2.4h-9.8v7.9h-2.8v-22h13.2c5.2 0 8 1.9 8 6.8 0 3.7-2 6.3-5.6 7l6 8.2h-3.3l-5.8-8zm-9.8-2.6h10.2c3 0 5.2-1.5 5.2-4.7 0-3.3-2.1-4.1-5.2-4.1h-10.2v8.8zm40.3-1.5l-6.8 5.6v6.4h-2.9v-22h2.9v12.3l15.2-12.2h3.7l-9.9 8.1 10.3 13.8h-3.6l-8.9-12z" />
+	<path fill="#050A14"
+		d="M188.4 71.7a10.4 10.4 0 01-20.8 0 10.4 10.4 0 1120.8 0zM224.2 45c-2.2-3.9-5-7.5-8.2-10.7l-12 7c-3.7-3.2-8-5.7-12.6-7.3a49.4 49.4 0 00-9.7 13.9 59 59 0 0140.1 14l7.6-4.4a57 57 0 00-5.2-12.5zM178 125.1c4.5 0 9-.6 13.4-1.7v-14a40 40 0 0012.5-7.2 47.7 47.7 0 00-7.1-15.3 59 59 0 01-32.2 27.7v8.7c4.4 1.2 8.9 1.8 13.4 1.8zM131.8 45c-2.3 4-4 8.1-5.2 12.5l12 7a40 40 0 000 14.4c5.7 1.5 11.3 2 16.9 1.5a59 59 0 01-8-41.7l-7.5-4.3c-3.2 3.2-6 6.7-8.2 10.6z" />
+	<path fill="#00B4FF"
+		d="M224.2 98.4c2.3-3.9 4-8 5.2-12.4l-12-7a40 40 0 000-14.5c-5.7-1.5-11.3-2-16.9-1.5a59 59 0 018 41.7l7.5 4.4c3.2-3.2 6-6.8 8.2-10.7zm-92.4 0c2.2 4 5 7.5 8.2 10.7l12-7a40 40 0 0012.6 7.3c4-4.1 7.3-8.8 9.7-13.8a59 59 0 01-40-14l-7.7 4.4c1.2 4.3 3 8.5 5.2 12.4zm46.2-80c-4.5 0-9 .5-13.4 1.7V34a40 40 0 00-12.5 7.2c1.5 5.7 4 10.8 7.1 15.4a59 59 0 0132.2-27.7V20a53.3 53.3 0 00-13.4-1.8z" />
+	<path fill="#00B4FF"
+		d="M178 9.2a62.6 62.6 0 11-.1 125.2A62.6 62.6 0 01178 9.2m0-9.2a71.7 71.7 0 100 143.5A71.7 71.7 0 00178 0z" />
+	<path fill="#050A14"
+		d="M96.6 212v4.3c-9.2-.8-15.4-5.8-15.4-17.8V180h4.6v18.4c0 8.6 4 12.6 10.8 13.5zm16-31.9v18.4c0 8.9-4.3 12.8-10.9 13.5v4.4c9.2-.7 15.5-5.6 15.5-18v-18.3h-4.7zM62.2 199v-2.2c0-12.7-8.8-17.4-21-17.4-12.1 0-20.7 4.7-20.7 17.4v2.2c0 12.8 8.6 17.6 20.7 17.6 1.5 0 3-.1 4.4-.3l11.8 6.2 2-3.3-8.2-4-6.4-3.1a32 32 0 01-3.6.2c-9.8 0-16-3.9-16-13.3v-2.2c0-9.3 6.2-13.1 16-13.1 9.9 0 16.3 3.8 16.3 13.1v2.2c0 5.3-2.1 8.7-5.6 10.8l4.8 2.4c3.4-2.8 5.5-7 5.5-13.2zM168 215.6h5.1L156 179.7h-4.8l17 36zM143 205l7.4-15.7-2.4-5-15.1 31.4h5.1l3.3-7h18.3l-1.8-3.7H143zm133.7 10.7h5.2l-17.3-35.9h-4.8l17 36zm-25-10.7l7.4-15.7-2.4-5-15.1 31.4h5.1l3.3-7h18.3l-1.7-3.7h-14.8zm73.8-2.5c6-1.2 9-5.4 9-11.4 0-8-4.5-10.9-12.9-10.9h-21.4v35.5h4.6v-31.3h16.5c5 0 8.5 1.4 8.5 6.7 0 5.2-3.5 7.7-8.5 7.7h-11.4v4.1h10.7l9.3 12.8h5.5l-9.9-13.2zm-117.4 9.9c-9.7 0-14.7-2.5-18.6-6.3l-2.2 3.8c5.1 5 11 6.7 21 6.7 1.6 0 3.1-.1 4.6-.3l-1.9-4h-3zm18.4-7c0-6.4-4.7-8.6-13.8-9.4l-10.1-1c-6.7-.7-9.3-2.2-9.3-5.6 0-2.5 1.4-4 4.6-5l-1.8-3.8c-4.7 1.4-7.5 4.2-7.5 8.9 0 5.2 3.4 8.7 13 9.6l11.3 1.2c6.4.6 8.9 2 8.9 5.4 0 2.7-2.1 4.7-6 5.8l1.8 3.9c5.3-1.6 8.9-4.7 8.9-10zm-20.3-21.9c7.9 0 13.3 1.8 18.1 5.7l1.8-3.9a30 30 0 00-19.6-5.9c-2 0-4 .1-5.7.3l1.9 4 3.5-.2z" />
+	<path fill="#00B4FF"
+		d="M.5 251.9c29.6-.5 59.2-.8 88.8-1l88.7-.3 88.7.3 44.4.4 44.4.6-44.4.6-44.4.4-88.7.3-88.7-.3a7981 7981 0 01-88.8-1z" />
+	<path fill="none" d="M-565.2 324H-252v15.8h-313.2z" />
+</svg>
+
+================================================
+File: src/boot/axios.ts
+================================================
+import { defineBoot } from '#q-app/wrappers';
+import axios, { type AxiosInstance } from 'axios';
+
+declare module 'vue' {
+  interface ComponentCustomProperties {
+    $axios: AxiosInstance;
+    $api: AxiosInstance;
+  }
+}
+
+// Be careful when using SSR for cross-request state pollution
+// due to creating a Singleton instance here;
+// If any client changes this (global) instance, it might be a
+// good idea to move this instance creation inside of the
+// "export default () => {}" function below (which runs individually
+// for each client)
+const api = axios.create({ baseURL: 'https://api.example.com' });
+
+export default defineBoot(({ app }) => {
+  // for use inside Vue files (Options API) through this.$axios and this.$api
+
+  app.config.globalProperties.$axios = axios;
+  // ^ ^ ^ this will allow you to use this.$axios (for Vue Options API form)
+  //       so you won't necessarily have to import axios in each vue file
+
+  app.config.globalProperties.$api = api;
+  // ^ ^ ^ this will allow you to use this.$api (for Vue Options API form)
+  //       so you can easily perform requests against your app's API
+});
+
+export { api };
+
+================================================
+File: src/components/EssentialLink.vue
+================================================
+<template>
+  <q-item
+    clickable
+    tag="a"
+    target="_blank"
+    :href="link"
+  >
+    <q-item-section
+      v-if="icon"
+      avatar
+    >
+      <q-icon :name="icon" />
+    </q-item-section>
+
+    <q-item-section>
+      <q-item-label>{{ title }}</q-item-label>
+      <q-item-label caption>{{ caption }}</q-item-label>
+    </q-item-section>
+  </q-item>
+</template>
+
+<script setup lang="ts">
+export interface EssentialLinkProps {
+  title: string;
+  caption?: string;
+  link?: string;
+  icon?: string;
+};
+
+withDefaults(defineProps<EssentialLinkProps>(), {
+  caption: '',
+  link: '#',
+  icon: '',
+});
+</script>
+
+================================================
+File: src/components/ExampleComponent.vue
+================================================
+<template>
+  <div>
+    <p>{{ title }}</p>
+    <ul>
+      <li v-for="todo in todos" :key="todo.id" @click="increment">
+        {{ todo.id }} - {{ todo.content }}
+      </li>
+    </ul>
+    <p>Count: {{ todoCount }} / {{ meta.totalCount }}</p>
+    <p>Active: {{ active ? 'yes' : 'no' }}</p>
+    <p>Clicks on todos: {{ clickCount }}</p>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { computed, ref } from 'vue';
+import type { Todo, Meta } from './models';
+
+interface Props {
+  title: string;
+  todos?: Todo[];
+  meta: Meta;
+  active: boolean;
+};
+
+const props = withDefaults(defineProps<Props>(), {
+  todos: () => []
+});
+
+const clickCount = ref(0);
+function increment() {
+  clickCount.value += 1;
+  return clickCount.value;
+}
+
+const todoCount = computed(() => props.todos.length);
+</script>
+
+================================================
+File: src/components/models.ts
+================================================
+export interface Todo {
+  id: number;
+  content: string;
+}
+
+export interface Meta {
+  totalCount: number;
+}
+
+================================================
+File: src/css/app.scss
+================================================
+// app global css in SCSS form
+
+================================================
+File: src/css/quasar.variables.scss
+================================================
+// Quasar SCSS (& Sass) Variables
+// --------------------------------------------------
+// To customize the look and feel of this app, you can override
+// the Sass/SCSS variables found in Quasar's source Sass/SCSS files.
+
+// Check documentation for full list of Quasar variables
+
+// Your own variables (that are declared here) and Quasar's own
+// ones will be available out of the box in your .vue/.scss/.sass files
+
+// It's highly recommended to change the default colors
+// to match your app's branding.
+// Tip: Use the "Theme Builder" on Quasar's documentation website.
+
+$primary   : #1976D2;
+$secondary : #26A69A;
+$accent    : #9C27B0;
+
+$dark      : #1D1D1D;
+$dark-page : #121212;
+
+$positive  : #21BA45;
+$negative  : #C10015;
+$info      : #31CCEC;
+$warning   : #F2C037;
+
+================================================
+File: src/layouts/MainLayout.vue
+================================================
+<template>
+  <q-layout view="lHh Lpr lFf">
+    <q-header elevated>
+      <q-toolbar>
+        <q-btn
+          flat
+          dense
+          round
+          icon="menu"
+          aria-label="Menu"
+          @click="toggleLeftDrawer"
+        />
+
+        <q-toolbar-title>
+          Quasar App
+        </q-toolbar-title>
+
+        <div>Quasar v{{ $q.version }}</div>
+      </q-toolbar>
+    </q-header>
+
+    <q-drawer
+      v-model="leftDrawerOpen"
+      show-if-above
+      bordered
+    >
+      <q-list>
+        <q-item-label
+          header
+        >
+          Essential Links
+        </q-item-label>
+
+        <EssentialLink
+          v-for="link in linksList"
+          :key="link.title"
+          v-bind="link"
+        />
+      </q-list>
+    </q-drawer>
+
+    <q-page-container>
+      <router-view />
+    </q-page-container>
+  </q-layout>
+</template>
+
+<script setup lang="ts">
+import { ref } from 'vue';
+import EssentialLink, { type EssentialLinkProps } from 'components/EssentialLink.vue';
+
+const linksList: EssentialLinkProps[] = [
+  {
+    title: 'Docs',
+    caption: 'quasar.dev',
+    icon: 'school',
+    link: 'https://quasar.dev'
+  },
+  {
+    title: 'Github',
+    caption: 'github.com/quasarframework',
+    icon: 'code',
+    link: 'https://github.com/quasarframework'
+  },
+  {
+    title: 'Discord Chat Channel',
+    caption: 'chat.quasar.dev',
+    icon: 'chat',
+    link: 'https://chat.quasar.dev'
+  },
+  {
+    title: 'Forum',
+    caption: 'forum.quasar.dev',
+    icon: 'record_voice_over',
+    link: 'https://forum.quasar.dev'
+  },
+  {
+    title: 'Twitter',
+    caption: '@quasarframework',
+    icon: 'rss_feed',
+    link: 'https://twitter.quasar.dev'
+  },
+  {
+    title: 'Facebook',
+    caption: '@QuasarFramework',
+    icon: 'public',
+    link: 'https://facebook.quasar.dev'
+  },
+  {
+    title: 'Quasar Awesome',
+    caption: 'Community Quasar projects',
+    icon: 'favorite',
+    link: 'https://awesome.quasar.dev'
+  }
+];
+
+const leftDrawerOpen = ref(false);
+
+function toggleLeftDrawer () {
+  leftDrawerOpen.value = !leftDrawerOpen.value;
+}
+</script>
+
+================================================
+File: src/pages/ErrorNotFound.vue
+================================================
+<template>
+  <div class="fullscreen bg-blue text-white text-center q-pa-md flex flex-center">
+    <div>
+      <div style="font-size: 30vh">
+        404
+      </div>
+
+      <div class="text-h2" style="opacity:.4">
+        Oops. Nothing here...
+      </div>
+
+      <q-btn
+        class="q-mt-xl"
+        color="white"
+        text-color="blue"
+        unelevated
+        to="/"
+        label="Go Home"
+        no-caps
+      />
+    </div>
+  </div>
+</template>
+
+<script setup lang="ts">
+//
+</script>
+
+================================================
+File: src/pages/IndexPage.vue
+================================================
+<template>
+  <q-page class="row items-center justify-evenly">
+    <example-component
+      title="Example component"
+      active
+      :todos="todos"
+      :meta="meta"
+    ></example-component>
+  </q-page>
+</template>
+
+<script setup lang="ts">
+import { ref } from 'vue';
+import type { Todo, Meta } from 'components/models';
+import ExampleComponent from 'components/ExampleComponent.vue';
+
+const todos = ref<Todo[]>([
+  {
+    id: 1,
+    content: 'ct1'
+  },
+  {
+    id: 2,
+    content: 'ct2'
+  },
+  {
+    id: 3,
+    content: 'ct3'
+  },
+  {
+    id: 4,
+    content: 'ct4'
+  },
+  {
+    id: 5,
+    content: 'ct5'
+  }
+]);
+
+const meta = ref<Meta>({
+  totalCount: 1200
+});
+</script>
+
+================================================
+File: src/router/index.ts
+================================================
+import { defineRouter } from '#q-app/wrappers';
+import {
+  createMemoryHistory,
+  createRouter,
+  createWebHashHistory,
+  createWebHistory,
+} from 'vue-router';
+import routes from './routes';
+
+/*
+ * If not building with SSR mode, you can
+ * directly export the Router instantiation;
+ *
+ * The function below can be async too; either use
+ * async/await or return a Promise which resolves
+ * with the Router instance.
+ */
+
+export default defineRouter(function (/* { store, ssrContext } */) {
+  const createHistory = process.env.SERVER
+    ? createMemoryHistory
+    : (process.env.VUE_ROUTER_MODE === 'history' ? createWebHistory : createWebHashHistory);
+
+  const Router = createRouter({
+    scrollBehavior: () => ({ left: 0, top: 0 }),
+    routes,
+
+    // Leave this as is and make changes in quasar.conf.js instead!
+    // quasar.conf.js -> build -> vueRouterMode
+    // quasar.conf.js -> build -> publicPath
+    history: createHistory(process.env.VUE_ROUTER_BASE),
+  });
+
+  return Router;
+});
+
+================================================
+File: src/router/routes.ts
+================================================
+import type { RouteRecordRaw } from 'vue-router';
+
+const routes: RouteRecordRaw[] = [
+  {
+    path: '/',
+    component: () => import('layouts/MainLayout.vue'),
+    children: [{ path: '', component: () => import('pages/IndexPage.vue') }],
+  },
+
+  // Always leave this as last one,
+  // but you can also remove it
+  {
+    path: '/:catchAll(.*)*',
+    component: () => import('pages/ErrorNotFound.vue'),
+  },
+];
+
+export default routes;
+
+================================================
+File: src/stores/example-store.ts
+================================================
+import { defineStore, acceptHMRUpdate } from 'pinia';
+
+export const useCounterStore = defineStore('counter', {
+  state: () => ({
+    counter: 0,
+  }),
+
+  getters: {
+    doubleCount: (state) => state.counter * 2,
+  },
+
+  actions: {
+    increment() {
+      this.counter++;
+    },
+  },
+});
+
+if (import.meta.hot) {
+  import.meta.hot.accept(acceptHMRUpdate(useCounterStore, import.meta.hot));
+}
+
+================================================
+File: src/stores/index.ts
+================================================
+import { defineStore } from '#q-app/wrappers'
+import { createPinia } from 'pinia'
+
+/*
+ * When adding new properties to stores, you should also
+ * extend the `PiniaCustomProperties` interface.
+ * @see https://pinia.vuejs.org/core-concepts/plugins.html#typing-new-store-properties
+ */
+declare module 'pinia' {
+  // eslint-disable-next-line @typescript-eslint/no-empty-object-type
+  export interface PiniaCustomProperties {
+    // add your custom properties here, if any
+  }
+}
+
+/*
+ * If not building with SSR mode, you can
+ * directly export the Store instantiation;
+ *
+ * The function below can be async too; either use
+ * async/await or return a Promise which resolves
+ * with the Store instance.
+ */
+
+export default defineStore((/* { ssrContext } */) => {
+  const pinia = createPinia()
+
+  // You can add Pinia plugins here
+  // pinia.use(SomePiniaPlugin)
+
+  return pinia
+})
+
+================================================
+File: src/App.vue
+================================================
+<template>
+  <router-view />
+</template>
+
+<script setup lang="ts">
+//
+</script>
+
+================================================
+File: src/env.d.ts
+================================================
+declare namespace NodeJS {
+  interface ProcessEnv {
+    NODE_ENV: string;
+    VUE_ROUTER_MODE: 'hash' | 'history' | 'abstract' | undefined;
+    VUE_ROUTER_BASE: string | undefined;
+  }
+}
+
+================================================
+File: .editorconfig
+================================================
+[*.{js,jsx,mjs,cjs,ts,tsx,mts,cts,vue}]
+charset = utf-8
+indent_size = 2
+indent_style = space
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+================================================
+File: .gitignore
+================================================
+.DS_Store
+.thumbs.db
+node_modules
+
+# Quasar core related directories
+.quasar
+/dist
+/quasar.config.*.temporary.compiled*
+
+# Cordova related directories and files
+/src-cordova/node_modules
+/src-cordova/platforms
+/src-cordova/plugins
+/src-cordova/www
+
+# Capacitor related directories and files
+/src-capacitor/www
+/src-capacitor/node_modules
+
+# Log files
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Editor directories and files
+.idea
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+
+# local .env files
+.env.local*
+
+================================================
+File: .npmrc
+================================================
+# pnpm-related options
+shamefully-hoist=true
+strict-peer-dependencies=false
+# to get the latest compatible packages when creating the project https://github.com/pnpm/pnpm/issues/6463
+resolution-mode=highest
+
+================================================
+File: .prettierrc.json
+================================================
+{
+  "$schema": "https://json.schemastore.org/prettierrc",
+  "singleQuote": true,
+  "printWidth": 100
+}
+
+================================================
+File: eslint.config.js
+================================================
+import js from '@eslint/js'
+import globals from 'globals'
+import pluginVue from 'eslint-plugin-vue'
+import pluginQuasar from '@quasar/app-vite/eslint'
+import { defineConfigWithVueTs, vueTsConfigs } from '@vue/eslint-config-typescript'
+import prettierSkipFormatting from '@vue/eslint-config-prettier/skip-formatting'
+
+export default defineConfigWithVueTs(
+  {
+    /**
+     * Ignore the following files.
+     * Please note that pluginQuasar.configs.recommended() already ignores
+     * the "node_modules" folder for you (and all other Quasar project
+     * relevant folders and files).
+     *
+     * ESLint requires "ignores" key to be the only one in this object
+     */
+    // ignores: []
+  },
+
+  pluginQuasar.configs.recommended(),
+  js.configs.recommended,
+
+  /**
+   * https://eslint.vuejs.org
+   *
+   * pluginVue.configs.base
+   *   -> Settings and rules to enable correct ESLint parsing.
+   * pluginVue.configs[ 'flat/essential']
+   *   -> base, plus rules to prevent errors or unintended behavior.
+   * pluginVue.configs["flat/strongly-recommended"]
+   *   -> Above, plus rules to considerably improve code readability and/or dev experience.
+   * pluginVue.configs["flat/recommended"]
+   *   -> Above, plus rules to enforce subjective community defaults to ensure consistency.
+   */
+  pluginVue.configs[ 'flat/essential' ],
+
+  {
+    files: ['**/*.ts', '**/*.vue'],
+    rules: {
+      '@typescript-eslint/consistent-type-imports': [
+        'error',
+        { prefer: 'type-imports' }
+      ],
+    }
+  },
+  // https://github.com/vuejs/eslint-config-typescript
+  vueTsConfigs.recommendedTypeChecked,
+
+  {
+    languageOptions: {
+      ecmaVersion: 'latest',
+      sourceType: 'module',
+
+      globals: {
+        ...globals.browser,
+        ...globals.node, // SSR, Electron, config files
+        process: 'readonly', // process.env.*
+        ga: 'readonly', // Google Analytics
+        cordova: 'readonly',
+        Capacitor: 'readonly',
+        chrome: 'readonly', // BEX related
+        browser: 'readonly' // BEX related
+      }
+    },
+
+    // add your custom rules here
+    rules: {
+      'prefer-promise-reject-errors': 'off',
+
+      // allow debugger during development only
+      'no-debugger': process.env.NODE_ENV === 'production' ? 'error' : 'off'
+    }
+  },
+
+  {
+    files: [ 'src-pwa/custom-service-worker.ts' ],
+    languageOptions: {
+      globals: {
+        ...globals.serviceworker
+      }
+    }
+  },
+
+  prettierSkipFormatting
+)
+
+================================================
+File: index.html
+================================================
+<!DOCTYPE html>
+<html>
+  <head>
+    <title><%= productName %></title>
+
+    <meta charset="utf-8">
+    <meta name="description" content="<%= productDescription %>">
+    <meta name="format-detection" content="telephone=no">
+    <meta name="msapplication-tap-highlight" content="no">
+    <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width<% if (ctx.mode.cordova || ctx.mode.capacitor) { %>, viewport-fit=cover<% } %>">
+
+    <link rel="icon" type="image/png" sizes="128x128" href="icons/favicon-128x128.png">
+    <link rel="icon" type="image/png" sizes="96x96" href="icons/favicon-96x96.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16x16.png">
+    <link rel="icon" type="image/ico" href="favicon.ico">
+  </head>
+  <body>
+    <!-- quasar:entry-point -->
+  </body>
+</html>
+
+================================================
+File: package.json
+================================================
+{
+  "name": "pet-sos",
+  "version": "0.0.1",
+  "description": "Post and discover lost or found pets in your area with photos, location, and all essential information.",
+  "productName": "Pet SOS",
+  "author": "rromero <rromero@heligrafics.net>",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "lint": "eslint -c ./eslint.config.js \"./src*/**/*.{ts,js,cjs,mjs,vue}\"",
+    "format": "prettier --write \"**/*.{js,ts,vue,scss,html,md,json}\" --ignore-path .gitignore",
+    "test": "echo \"No test specified\" && exit 0",
+    "dev": "quasar dev",
+    "build": "quasar build",
+    "postinstall": "quasar prepare"
+  },
+  "dependencies": {
+    "axios": "^1.2.1",
+    "pinia": "^3.0.1",
+    "@quasar/extras": "^1.16.4",
+    "quasar": "^2.16.0",
+    "vue": "^3.4.18",
+    "vue-router": "^4.0.12"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.14.0",
+    "eslint": "^9.14.0",
+    "eslint-plugin-vue": "^9.30.0",
+    "globals": "^15.12.0",
+    "vue-tsc": "^2.0.29",
+    "@vue/eslint-config-typescript": "^14.4.0",
+    "vite-plugin-checker": "^0.9.0",
+    "@vue/eslint-config-prettier": "^10.1.0",
+    "prettier": "^3.3.3",
+    "@types/node": "^20.5.9",
+    "@quasar/app-vite": "^2.1.0",
+    "autoprefixer": "^10.4.2",
+    "typescript": "~5.5.3"
+  },
+  "engines": {
+    "node": "^28 || ^26 || ^24 || ^22 || ^20 || ^18",
+    "npm": ">= 6.13.4",
+    "yarn": ">= 1.21.1"
+  }
+}
+
+================================================
+File: postcss.config.js
+================================================
+// https://github.com/michael-ciniawsky/postcss-load-config
+
+import autoprefixer from 'autoprefixer'
+// import rtlcss from 'postcss-rtlcss'
+
+export default {
+  plugins: [
+    // https://github.com/postcss/autoprefixer
+    autoprefixer({
+      overrideBrowserslist: [
+        'last 4 Chrome versions',
+        'last 4 Firefox versions',
+        'last 4 Edge versions',
+        'last 4 Safari versions',
+        'last 4 Android versions',
+        'last 4 ChromeAndroid versions',
+        'last 4 FirefoxAndroid versions',
+        'last 4 iOS versions'
+      ]
+    }),
+
+    // https://github.com/elchininet/postcss-rtlcss
+    // If you want to support RTL css, then
+    // 1. yarn/pnpm/bun/npm install postcss-rtlcss
+    // 2. optionally set quasar.config.js > framework > lang to an RTL language
+    // 3. uncomment the following line (and its import statement above):
+    // rtlcss()
+  ]
+}
+
+================================================
+File: quasar.config.ts
+================================================
+// Configuration for your app
+// https://v2.quasar.dev/quasar-cli-vite/quasar-config-file
+
+import { defineConfig } from '#q-app/wrappers';
+
+export default defineConfig((/* ctx */) => {
+  return {
+    // https://v2.quasar.dev/quasar-cli-vite/prefetch-feature
+    // preFetch: true,
+
+    // app boot file (/src/boot)
+    // --> boot files are part of "main.js"
+    // https://v2.quasar.dev/quasar-cli-vite/boot-files
+    boot: [
+      'axios'
+    ],
+
+    // https://v2.quasar.dev/quasar-cli-vite/quasar-config-file#css
+    css: [
+      'app.scss'
+    ],
+
+    // https://github.com/quasarframework/quasar/tree/dev/extras
+    extras: [
+      // 'ionicons-v4',
+      // 'mdi-v7',
+      // 'fontawesome-v6',
+      // 'eva-icons',
+      // 'themify',
+      // 'line-awesome',
+      // 'roboto-font-latin-ext', // this or either 'roboto-font', NEVER both!
+
+      'roboto-font', // optional, you are not bound to it
+      'material-icons', // optional, you are not bound to it
+    ],
+
+    // Full list of options: https://v2.quasar.dev/quasar-cli-vite/quasar-config-file#build
+    build: {
+      target: {
+        browser: [ 'es2022', 'firefox115', 'chrome115', 'safari14' ],
+        node: 'node20'
+      },
+
+      typescript: {
+        strict: true,
+        vueShim: true
+        // extendTsConfig (tsConfig) {}
+      },
+
+      vueRouterMode: 'hash', // available values: 'hash', 'history'
+      // vueRouterBase,
+      // vueDevtools,
+      // vueOptionsAPI: false,
+
+      // rebuildCache: true, // rebuilds Vite/linter/etc cache on startup
+
+      // publicPath: '/',
+      // analyze: true,
+      // env: {},
+      // rawDefine: {}
+      // ignorePublicFolder: true,
+      // minify: false,
+      // polyfillModulePreload: true,
+      // distDir
+
+      // extendViteConf (viteConf) {},
+      // viteVuePluginOptions: {},
+      
+      vitePlugins: [
+        ['vite-plugin-checker', {
+          vueTsc: true,
+          eslint: {
+            lintCommand: 'eslint -c ./eslint.config.js "./src*/**/*.{ts,js,mjs,cjs,vue}"',
+            useFlatConfig: true
+          }
+        }, { server: false }]
+      ]
+    },
+
+    // Full list of options: https://v2.quasar.dev/quasar-cli-vite/quasar-config-file#devserver
+    devServer: {
+      // https: true,
+      open: true // opens browser window automatically
+    },
+
+    // https://v2.quasar.dev/quasar-cli-vite/quasar-config-file#framework
+    framework: {
+      config: {},
+
+      // iconSet: 'material-icons', // Quasar icon set
+      // lang: 'en-US', // Quasar language pack
+
+      // For special cases outside of where the auto-import strategy can have an impact
+      // (like functional components as one of the examples),
+      // you can manually specify Quasar components/directives to be available everywhere:
+      //
+      // components: [],
+      // directives: [],
+
+      // Quasar plugins
+      plugins: []
+    },
+
+    // animations: 'all', // --- includes all animations
+    // https://v2.quasar.dev/options/animations
+    animations: [],
+
+    // https://v2.quasar.dev/quasar-cli-vite/quasar-config-file#sourcefiles
+    // sourceFiles: {
+    //   rootComponent: 'src/App.vue',
+    //   router: 'src/router/index',
+    //   store: 'src/store/index',
+    //   pwaRegisterServiceWorker: 'src-pwa/register-service-worker',
+    //   pwaServiceWorker: 'src-pwa/custom-service-worker',
+    //   pwaManifestFile: 'src-pwa/manifest.json',
+    //   electronMain: 'src-electron/electron-main',
+    //   electronPreload: 'src-electron/electron-preload'
+    //   bexManifestFile: 'src-bex/manifest.json
+    // },
+
+    // https://v2.quasar.dev/quasar-cli-vite/developing-ssr/configuring-ssr
+    ssr: {
+      prodPort: 3000, // The default port that the production server should use
+                      // (gets superseded if process.env.PORT is specified at runtime)
+
+      middlewares: [
+        'render' // keep this as last one
+      ],
+
+      // extendPackageJson (json) {},
+      // extendSSRWebserverConf (esbuildConf) {},
+
+      // manualStoreSerialization: true,
+      // manualStoreSsrContextInjection: true,
+      // manualStoreHydration: true,
+      // manualPostHydrationTrigger: true,
+
+      pwa: false
+      // pwaOfflineHtmlFilename: 'offline.html', // do NOT use index.html as name!
+
+      // pwaExtendGenerateSWOptions (cfg) {},
+      // pwaExtendInjectManifestOptions (cfg) {}
+    },
+
+    // https://v2.quasar.dev/quasar-cli-vite/developing-pwa/configuring-pwa
+    pwa: {
+      workboxMode: 'GenerateSW' // 'GenerateSW' or 'InjectManifest'
+      // swFilename: 'sw.js',
+      // manifestFilename: 'manifest.json',
+      // extendManifestJson (json) {},
+      // useCredentialsForManifestTag: true,
+      // injectPwaMetaTags: false,
+      // extendPWACustomSWConf (esbuildConf) {},
+      // extendGenerateSWOptions (cfg) {},
+      // extendInjectManifestOptions (cfg) {}
+    },
+
+    // Full list of options: https://v2.quasar.dev/quasar-cli-vite/developing-cordova-apps/configuring-cordova
+    cordova: {
+      // noIosLegacyBuildFlag: true, // uncomment only if you know what you are doing
+    },
+
+    // Full list of options: https://v2.quasar.dev/quasar-cli-vite/developing-capacitor-apps/configuring-capacitor
+    capacitor: {
+      hideSplashscreen: true
+    },
+
+    // Full list of options: https://v2.quasar.dev/quasar-cli-vite/developing-electron-apps/configuring-electron
+    electron: {
+      // extendElectronMainConf (esbuildConf) {},
+      // extendElectronPreloadConf (esbuildConf) {},
+
+      // extendPackageJson (json) {},
+
+      // Electron preload scripts (if any) from /src-electron, WITHOUT file extension
+      preloadScripts: [ 'electron-preload' ],
+
+      // specify the debugging port to use for the Electron app when running in development mode
+      inspectPort: 5858,
+
+      bundler: 'packager', // 'packager' or 'builder'
+
+      packager: {
+        // https://github.com/electron-userland/electron-packager/blob/master/docs/api.md#options
+
+        // OS X / Mac App Store
+        // appBundleId: '',
+        // appCategoryType: '',
+        // osxSign: '',
+        // protocol: 'myapp://path',
+
+        // Windows only
+        // win32metadata: { ... }
+      },
+
+      builder: {
+        // https://www.electron.build/configuration/configuration
+
+        appId: 'pet-sos'
+      }
+    },
+
+    // Full list of options: https://v2.quasar.dev/quasar-cli-vite/developing-browser-extensions/configuring-bex
+    bex: {
+      // extendBexScriptsConf (esbuildConf) {},
+      // extendBexManifestJson (json) {},
+
+      /**
+       * The list of extra scripts (js/ts) not in your bex manifest that you want to
+       * compile and use in your browser extension. Maybe dynamic use them?
+       *
+       * Each entry in the list should be a relative filename to /src-bex/
+       *
+       * @example [ 'my-script.ts', 'sub-folder/my-other-script.js' ]
+       */
+      extraScripts: []
+    }
+  }
+});
+
+================================================
+File: README.md
+================================================
+# Pet SOS (pet-sos)
+
+Post and discover lost or found pets in your area with photos, location, and all essential information.
+
+## Install the dependencies
+```bash
+yarn
+# or
+npm install
+```
+
+### Start the app in development mode (hot-code reloading, error reporting, etc.)
+```bash
+quasar dev
+```
+
+
+### Lint the files
+```bash
+yarn lint
+# or
+npm run lint
+```
+
+
+### Format the files
+```bash
+yarn format
+# or
+npm run format
+```
+
+
+### Build the app for production
+```bash
+quasar build
+```
+
+### Customize the configuration
+See [Configuring quasar.config.js](https://v2.quasar.dev/quasar-cli-vite/quasar-config-js).
+
+================================================
+File: tsconfig.json
+================================================
+{
+  "extends": "./.quasar/tsconfig.json"
+}
+
