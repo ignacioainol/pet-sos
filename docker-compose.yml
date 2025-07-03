@@ -1,0 +1,8 @@
+version: '3.9'
+
+services:
+  petsos:
+    build: .
+    ports:
+      - '8080:80'
+    restart: always
